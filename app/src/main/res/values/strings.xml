@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">R-One</string>
-    <string name="google_map_api_key">AIzaSyDB__xFQQUg8uyoH3jn9qkUN2G4jo2bsBs</string>
-    <string name="open_weather_api_key">3b11da221bb0601d6da9b01013d27e36</string>
+    <string name="google_map_api_key">your google map api key</string>
+    <string name="open_weather_api_key">your open weather api key</string>
     <string name="news_api_key"> </string>
     <string name="facebook_api_key"> </string>
     <string name="x_api_key"> </string>
