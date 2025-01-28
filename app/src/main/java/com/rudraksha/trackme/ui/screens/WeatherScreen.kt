@@ -7,21 +7,31 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -43,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -57,8 +68,10 @@ import com.rudraksha.trackme.model.DailyWeather
 import com.rudraksha.trackme.model.HourlyWeather
 import com.rudraksha.trackme.repo.CityCoordinates
 import com.rudraksha.trackme.viewmodel.WeatherViewModel
-//import coil.compose.AsyncImage
+import coil.compose.AsyncImage
 import com.rudraksha.trackme.R
+import com.rudraksha.trackme.util.getWeatherIcon
+import com.rudraksha.trackme.util.toDateAndTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,14 +85,15 @@ fun WeatherScreen(
     var cityName by remember { mutableStateOf("") }
     var currentCityIndex by remember { mutableIntStateOf(-1) }
     var suggestions by remember { mutableStateOf<List<CityCoordinates>>(emptyList()) }
+    var isFocused = remember { mutableStateOf(false) }
 
     val weatherUiState = weatherViewModel.uiState.collectAsState().value
+    Log.d("My icon", weatherUiState.weatherData.weather.firstOrNull()?.icon ?: "No")
+    val icon = getWeatherIcon(weatherUiState.weatherData.weather.firstOrNull()?.icon ?: "01d")
 
     LaunchedEffect(Unit) {
         weatherViewModel.fetchWeatherData(
             "London"
-//            46.0350465,
-//            8.7717205
         )
     }
     LaunchedEffect(fetch) {
@@ -183,11 +197,15 @@ fun WeatherScreen(
                     color = Color.White
                 )
 
-                /*Text(
-                    text = weatherUiState.weatherData.weather.firstOrNull()?.description ?: "Weather",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
+                /*WeatherIcon(
+                    iconCode = weatherUiState.weatherData.weather.firstOrNull()?.icon ?: "01d"
                 )*/
+                Icon(
+                    imageVector = icon,
+                    contentDescription = "Weather Icon",
+                    tint = Color.White,
+                    modifier = modifier.size(48.dp),
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -199,13 +217,45 @@ fun WeatherScreen(
                 )
 
                 Text(
-                    text = weatherUiState.weatherData.weather.firstOrNull()?.description?.capitalize( Locale.current ) ?: "Weather",
+                    text = weatherUiState.weatherData.weather.firstOrNull()?.description?.capitalize(
+                        Locale.current
+                    ) ?: "Weather",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Feels like ",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
+                        Text(
+                            text = weatherUiState.weatherData.main.feels_like.toString(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = (weatherUiState.weatherData.main.temp_min).toString() + "°C/" + (weatherUiState.weatherData.main.temp_max) + "°C",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(modifier = Modifier.fillMaxWidth().height(4.dp))
+                HorizontalDivider(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp))
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Hourly forecast
@@ -229,7 +279,9 @@ fun WeatherScreen(
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(modifier = Modifier.fillMaxWidth().height(4.dp))
+                    HorizontalDivider(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp))
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
@@ -253,20 +305,188 @@ fun WeatherScreen(
                         }
                     }
                 }
+
+                // Other Weather details
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .background(
+                            color = Color(0x33000000),
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Cloudiness",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Cloud,
+                                contentDescription = "Cloudiness",
+                                tint = Color.Gray
+                            )
+                            Text(
+                                text = weatherUiState.weatherData.clouds.all.toString(),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Sunrise",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.Default.WbSunny,
+                                contentDescription = "Sunrise",
+                                tint = Color.Yellow
+                            )
+                            Text(
+                                text = weatherUiState.weatherData.sys.sunrise.toDateAndTime().second,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Sunrise",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.Default.WbSunny,
+                                contentDescription = "Sunnset",
+                                tint = Color.Black
+                            )
+                            Text(
+                                text = weatherUiState.weatherData.sys.sunset.toDateAndTime().second,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Wind",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Air,
+                                contentDescription = "wind",
+                                tint = Color.LightGray
+                            )
+                            Text(
+                                text = weatherUiState.weatherData.wind.speed.toString() + "km/h " + weatherUiState.weatherData.wind.deg.toString() + "°",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Visibility",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Visibility,
+                                contentDescription = "Visibility",
+                                tint = Color.White
+                            )
+                            Text(
+                                text = weatherUiState.weatherData.visibility.toString(),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Humidity",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.Default.WaterDrop,
+                                contentDescription = "Humidity",
+                                tint = Color.Black
+                            )
+                            Text(
+                                text = weatherUiState.weatherData.main.humidity.toString(),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    item {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Pressure",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
+                                contentDescription = "Visibility",
+                                tint = Color.Gray
+                            )
+                            Text(
+                                text = weatherUiState.weatherData.main.pressure.toString(),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
             }
 
             if (isSearchShown) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().wrapContentHeight()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
                 ) {
                     // Input field for city name
-                    /*BasicTextField(
-                        value = cityName,
-                        onValueChange = { it ->
-                            cityName = it
-                        },
-                        modifier = Modifier.height(50.dp)
-                    )*/
                     TextField(
                         value = cityName,
                         onValueChange = { newValue ->
@@ -278,23 +498,26 @@ fun WeatherScreen(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         },
-                        minLines = 1,
-                        maxLines = 1,
+                        singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
-//                            .clickable {
-//                                focusRequester.requestFocus()
-//                            }
+                            .height(56.dp)
+                            .padding(horizontal = 8.dp)
+                            .onFocusChanged { focusState ->
+                                isFocused.value = focusState.isFocused
+                            }
+                            .clickable {
+                                focusRequester.requestFocus()
+                            }
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF00F3FD),
                                         Color(0xFF0090FD),
                                         Color(0xFF2700F5),
                                         Color(0xFF8700FD),
-                                    )
-                                )
+                                    ),
+                                ),
+                                shape = RoundedCornerShape(4.dp)
                             )
                     )
 
@@ -329,7 +552,7 @@ fun WeatherScreen(
                                         .border(
                                             width = 2.dp,
                                             color = Color.Black,
-                                        /*brush = Brush.linearGradient(
+                                            /*brush = Brush.linearGradient(
                                             0.0f to Color.Red,
                                             0.3f to Color.Green,
                                             1.0f to Color.Black,
@@ -392,7 +615,7 @@ fun DailyWeatherCard(forecast: DailyWeather) {
     }
 }
 
-/*
+
 @Composable
 fun WeatherIcon(iconCode: String, modifier: Modifier = Modifier) {
     val imageUrl = "http://openweathermap.org/img/w/$iconCode.png"
@@ -412,7 +635,6 @@ fun WeatherIcon(iconCode: String, modifier: Modifier = Modifier) {
         }
     )
 }
-*/
 
 @Preview
 @Composable
