@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.rudraksha.trackme"
+    namespace = "com.rudraksha.rone"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.rudraksha.trackme"
+        applicationId = "com.rudraksha.rone"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -67,7 +67,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.material.icons.extended)
 
-    implementation("io.coil-kt:coil-compose:2.5.0") // Coil compose
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation(libs.androidx.constraintlayout) // Coil compose
 
     testImplementation(libs.junit)
 
