@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-const val WEATHER_API_KEY = "3b11da221bb0601d6da9b01013d27e36"
+const val WEATHER_API_KEY = "your open weather api key"
 // Base URL for the OpenWeather API
 const val BASE_URL = "https://api.openweathermap.org/"
 
