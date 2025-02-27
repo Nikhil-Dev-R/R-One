@@ -5,10 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-/*
-API_KEY = 0Hnr14Uvl2rshVUpVtcfU6Cgo
-API_KEY_SECRET = TpN0mvgrT0fOOI00NvHWX5mgI6051nnYBqHQ1KKth08woL2NqF
-*/
 val categoryGradientColors = listOf(
     Color(0xABF44336),
     Color(0xAB9C27B0),
