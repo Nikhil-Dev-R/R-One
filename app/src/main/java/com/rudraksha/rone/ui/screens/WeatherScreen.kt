@@ -53,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +93,7 @@ fun WeatherScreen(
     modifier: Modifier = Modifier,
     weatherViewModel: WeatherViewModel = viewModel()
 ) {
+    val scope = rememberCoroutineScope()
     var isSearchShown by remember { mutableStateOf(false) }
     var fetch by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -101,14 +103,12 @@ fun WeatherScreen(
     var isFocused = remember { mutableStateOf(false) }
 
     val weatherUiState = weatherViewModel.uiState.collectAsState().value
-    Log.d("My icon", weatherUiState.weatherData.weather.firstOrNull()?.icon ?: "No")
+//    Log.d("My icon", weatherUiState.weatherData.weather.firstOrNull()?.icon ?: "No")
     val icon = getWeatherIcon(weatherUiState.weatherData.weather.firstOrNull()?.icon ?: "01d")
     val gradientColors = getWeatherGradientColors(weatherUiState.weatherData.weather.firstOrNull()?.icon ?: "01d")
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.Default).launch {
-            weatherViewModel.fetchWeatherData(
-                "London"
-            )
+            weatherViewModel.fetchWeatherData("London")
         }
     }
     LaunchedEffect(fetch) {

@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Card
@@ -34,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +55,9 @@ import com.rudraksha.rone.model.Article
 import com.rudraksha.rone.util.categoryList
 import com.rudraksha.rone.util.categoryGradientColors
 import com.rudraksha.rone.viewmodel.NewsUiState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 fun Modifier.categoryWidth(category: String): Modifier {
@@ -66,12 +73,14 @@ fun NewsScreen(
     onItemClick: (String) -> Unit = {}
 ) {
     var category by remember { mutableStateOf("general") }
+    val coroutineScope = rememberCoroutineScope()
 
-    fetchNews(category)
-
-    LaunchedEffect(Unit, category) {
-        if (newsUiState.news[category]?.isEmpty() == true) {
-            fetchNews(category)
+    LaunchedEffect(category) {
+        coroutineScope.launch {
+            Log.d("news[category]", newsUiState.news[category]?.size.toString())
+            if (newsUiState.news[category]?.isEmpty() == true || newsUiState.news[category] == null) {
+                fetchNews(category)
+            }
         }
     }
 
@@ -86,7 +95,7 @@ fun NewsScreen(
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFFFF1919),
-                    titleContentColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
                     actionIconContentColor = Color.White
                 )
             )
@@ -146,7 +155,9 @@ fun NewsScreen(
                                     shape = MaterialTheme.shapes.medium
                                 )
                                 .clickable {
-                                    category = item
+                                    coroutineScope.launch {
+                                        category = item
+                                    }
                                 }
                                 .then(
                                     if (category == item) {
@@ -200,9 +211,9 @@ fun NewsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    itemsIndexed(newsUiState.news[category] ?: listOf()) { index, article ->
+                    items(newsUiState.news[category] ?: listOf()) { article ->
                         NewsCard(
-                            article = article ?: Article(),
+                            article = article,
                             onItemClick = onItemClick
                         )
                     }
@@ -221,39 +232,37 @@ fun NewsCard(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
+            .padding(4.dp)
             .clickable {
-                Log.d("OnItemClick", article.source.id ?: "null")
-                onItemClick(article.source.id ?: "null")
+//                Log.d("OnItemClick", article.url)
+                onItemClick(article.url)
             },
         elevation = CardDefaults.cardElevation(4.dp),
         border = CardDefaults.outlinedCardBorder()
     ) {
         Column(
+            modifier = Modifier
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
+            AsyncImage(
+                model = article.urlToImage,
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .wrapContentSize()
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+
             Text(
                 text = article.title,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-
-            AsyncImage(
-                model = article.urlToImage,
-                contentDescription = null,
+                fontWeight = FontWeight.Bold,
+                maxLines = Int.MAX_VALUE,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = article.description ?: "No description available!",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                    .padding(4.dp)
             )
         }
     }

@@ -35,6 +35,9 @@ import com.rudraksha.rone.ui.screens.XScreen
 import com.rudraksha.rone.viewmodel.MapViewModel
 import com.rudraksha.rone.viewmodel.NewsViewModel
 import com.rudraksha.rone.viewmodel.WeatherViewModel
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 // Define routes as a sealed class
 sealed class Screen(val route: String) {
@@ -42,7 +45,7 @@ sealed class Screen(val route: String) {
     data object Location : Screen("location")
     data object Weather : Screen("weather")
     data object News : Screen("news")
-    data object NewsDesc : Screen("news_desc/{id}")
+    data object NewsDesc : Screen("news_desc")
     data object Profile : Screen("profile")
     data object Facebook : Screen("facebook")
     data object FacebookPost : Screen("facebook_post")
@@ -52,7 +55,6 @@ sealed class Screen(val route: String) {
     data object InstagramPost : Screen("instagram_post")
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun NavigationManager(
     navController: NavHostController,
@@ -113,19 +115,8 @@ fun NavigationManager(
         }
 
         composable(route = Screen.Location.route) {
-            // Create multiple permission states
-            val permissionList = mutableListOf(
-                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION,
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                permissionList.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            }
-            var permissionGranted: Boolean = false
-
             LocationScreen(
                 context = context,
-                permissionGranted = permissionGranted,
-                checkPermission = {false},
                 fitnessData = fitnessData,
                 startTracking = { mapViewModel.startTracking() },
                 stopTracking = { mapViewModel.stopTracking() }
@@ -136,21 +127,25 @@ fun NavigationManager(
             NewsScreen(
                 fetchNews = newsViewModel::fetchNews,
                 newsUiState = newsUiState,
-                onItemClick = { id ->
-                    navController.navigate("${Screen.NewsDesc.route}/$id")
+                onItemClick = { url ->
+                    val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+                    navController.navigate("${Screen.NewsDesc.route}/${encodedUrl}")
                 }
             )
         }
         composable(
-            route = "${Screen.NewsDesc.route}/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.StringType },)
+            route = "${Screen.NewsDesc.route}/{url}",
+            arguments = listOf(navArgument("url") { type = NavType.StringType },)
         ) { navStack ->
-            val id = navStack.arguments?.getString("id")
-            val article = newsUiState.news.values.find { it ->
-                it.any { it.source.id == id }
-            }
+            val encodedUrl = navStack.arguments?.getString("url") ?: "default"
+            val url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.toString())
+            Log.d("url", url)
+
+            val article = newsUiState.news.values.flatMap { it }.find { it.url == url }
+
+            Log.d("Nav:Article", article?.title ?: "title cdcd")
             NewsDescScreen(
-                article = article?.first() ?: Article()
+                article = article ?: Article()
             )
         }
 

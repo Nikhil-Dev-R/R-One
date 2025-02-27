@@ -38,6 +38,7 @@ import com.rudraksha.rone.R
 import com.rudraksha.rone.ui.Screen
 import com.rudraksha.rone.ui.components.RCard
 import com.rudraksha.rone.ui.theme.TrackMeTheme
+import com.rudraksha.rone.util.getDefaultGradientColors
 
 @Composable
 fun HomeScreen(
@@ -49,11 +50,7 @@ fun HomeScreen(
             .height(200.dp)
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.secondary,
-                        MaterialTheme.colorScheme.tertiary
-                    )
+                    colors = getDefaultGradientColors()
                 )
             )
     )

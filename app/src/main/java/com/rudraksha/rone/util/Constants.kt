@@ -1,6 +1,9 @@
 package com.rudraksha.rone.util
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 /*
 API_KEY = 0Hnr14Uvl2rshVUpVtcfU6Cgo
@@ -54,6 +57,13 @@ val defaultWeatherGradientColors = listOf(
     Color(0xFF00F3FD),
 )
 
+@Composable
+fun getDefaultGradientColors() = listOf(
+    MaterialTheme.colorScheme.primary,
+    MaterialTheme.colorScheme.secondary,
+    MaterialTheme.colorScheme.tertiary
+)
+
 val categoryList = listOf(
     "general",
     "business",
@@ -63,4 +73,7 @@ val categoryList = listOf(
     "sports",
     "technology",
 )
+
+val ExpandedImageSize = 300.dp
+val CollapsedImageSize = 64.dp
 

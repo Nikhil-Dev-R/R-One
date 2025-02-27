@@ -38,60 +38,66 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            val newLocation = locationResult.lastLocation ?: return
+            viewModelScope.launch {
+                val newLocation = locationResult.lastLocation ?: return@launch
 
-            if (lastLocation != null) {
-                val newDistance = lastLocation?.distanceTo(newLocation) ?: 0f
+                if (lastLocation != null) {
+                    val newDistance = lastLocation?.distanceTo(newLocation) ?: 0f
 
-                if (newDistance > 3f) {
-                    _uiState.update {
-                        UiState (
-                            mapData = FitnessData(
-                                path = it.mapData.path + newLocation,
-                                totalDistance = it.mapData.totalDistance + newDistance,
-                                currentLocation = newLocation
+                    if (newDistance > 3f) {
+                        _uiState.update {
+                            UiState(
+                                mapData = FitnessData(
+                                    path = it.mapData.path + newLocation,
+                                    totalDistance = it.mapData.totalDistance + newDistance,
+                                    currentLocation = newLocation
+                                )
                             )
-                        )
+                        }
                     }
                 }
+                lastLocation = newLocation
             }
-            lastLocation = newLocation
         }
     }
 
     @SuppressLint("MissingPermission")
     fun startTracking() {
-        if (isTracking) return
+        viewModelScope.launch {
+            if (isTracking) return@launch
 
-        val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            1000L // Update every 1 second
-        ).build()
+            val locationRequest = LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                1000L // Update every 1 second
+            ).build()
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            location?.let { currentLocation ->
-                lastLocation = currentLocation
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                location?.let { currentLocation ->
+                    lastLocation = currentLocation
 
-                _uiState.update {
-                    UiState(
-                        mapData = FitnessData(
-                            path = it.mapData.path + currentLocation,
-                            totalDistance = it.mapData.totalDistance,
-                            currentLocation = currentLocation
+                    _uiState.update {
+                        UiState(
+                            mapData = FitnessData(
+                                path = it.mapData.path + currentLocation,
+                                totalDistance = it.mapData.totalDistance,
+                                currentLocation = currentLocation
+                            )
                         )
-                    )
+                    }
                 }
             }
-        }
 
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+        }
     }
 
     fun stopTracking() {
-        if (!isTracking) return
-        isTracking = false
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-        lastLocation = null
+        viewModelScope.launch {
+            if (!isTracking) return@launch
+            isTracking = false
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+            lastLocation = null
+        }
     }
 
     companion object {
