@@ -35,11 +35,8 @@ A modern Android application that provides real-time **weather updates**, the la
 | **Kotlin**  | Primary programming language  |
 | **Jetpack Compose**  | UI development  |
 | **Retrofit & OkHttp**  | API requests  |
-| **Ktor WebSocket**  | Real-time updates  |
-| **Room Database**  | Offline data storage  |
 | **Google Maps API**  | Location tracking  |
 | **MVVM Architecture**  | App structure  |
-| **Hilt/Dagger**  | Dependency Injection  |
 
 ---
 
